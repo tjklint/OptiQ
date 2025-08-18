@@ -7,13 +7,11 @@ public class OptiQApiService
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<OptiQApiService> _logger;
-    private readonly string _baseUrl;
 
-    public OptiQApiService(HttpClient httpClient, ILogger<OptiQApiService> logger, IConfiguration configuration)
+    public OptiQApiService(HttpClient httpClient, ILogger<OptiQApiService> logger)
     {
         _httpClient = httpClient;
         _logger = logger;
-        _baseUrl = configuration["OptiQApi:BaseUrl"] ?? "https://localhost:7001/api";
     }
 
     public async Task<PortfolioOptimizationResponse?> OptimizePortfolioAsync(
@@ -26,7 +24,7 @@ public class OptiQApiService
             
             _logger.LogInformation("Sending optimization request to API");
             
-            var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}/portfolio/optimize", request);
+            var response = await _httpClient.PostAsJsonAsync("api/portfolio/optimize", request);
             
             if (response.IsSuccessStatusCode)
             {
@@ -53,7 +51,7 @@ public class OptiQApiService
         {
             _logger.LogInformation("Fetching sample portfolio data");
             
-            var response = await _httpClient.GetFromJsonAsync<PortfolioDataDto>($"{_baseUrl}/portfolio/sample");
+            var response = await _httpClient.GetFromJsonAsync<PortfolioDataDto>("api/portfolio/sample");
             
             _logger.LogInformation("Sample portfolio data retrieved");
             return response;
@@ -72,7 +70,7 @@ public class OptiQApiService
             _logger.LogInformation("Fetching random QAOA parameters");
             
             var response = await _httpClient.GetFromJsonAsync<QAOAParametersDto>(
-                $"{_baseUrl}/portfolio/parameters/random?layers={layers}&samples={samples}");
+                $"api/portfolio/parameters/random?layers={layers}&samples={samples}");
             
             _logger.LogInformation("Random QAOA parameters retrieved");
             return response;
@@ -88,7 +86,7 @@ public class OptiQApiService
     {
         try
         {
-            var response = await _httpClient.GetAsync($"{_baseUrl}/portfolio/health");
+            var response = await _httpClient.GetAsync("api/portfolio/health");
             return response.IsSuccessStatusCode;
         }
         catch
