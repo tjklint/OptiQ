@@ -1,9 +1,27 @@
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background-color: #ffffff !important;
+    color: #333333 !important;
+    margin: 0;
+    padding: 0;
+}
+
+/* Ensure all elements inherit proper colors */
+* {
+    color: inherit;
+}
+
+/* Reset any white text */
+.text-white {
+    color: #333333 !important;
 }
 
 a, .btn-link {
-    color: #006bb7;
+    color: #006bb7 !important;
+}
+
+a:hover, .btn-link:hover {
+    color: #004d80 !important;
 }
 
 .btn-primary {
@@ -18,10 +36,41 @@ a, .btn-link {
 
 .content {
     padding-top: 1.1rem;
+    color: #333333 !important;
+    background-color: #ffffff !important;
+}
+
+/* Ensure all page content is visible */
+.page, main, .container, .container-fluid {
+    background-color: #ffffff !important;
+    color: #333333 !important;
+}
+
+/* Force all text elements to be visible */
+p, div, span, h1, h2, h3, h4, h5, h6, label, td, th, li, ul, ol {
+    color: #333333 !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #2c3e50 !important;
 }
 
 h1:focus {
     outline: none;
+}
+
+.card {
+    background-color: #ffffff;
+    color: #333333;
+    border: 1px solid #e0e0e0;
+}
+
+.card-body {
+    color: #333333;
+}
+
+.text-muted {
+    color: #6c757d !important;
 }
 
 .valid.modified:not([type=checkbox]) {
