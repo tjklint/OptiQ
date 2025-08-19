@@ -1,4 +1,6 @@
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using OptiQ.QuantumCore;
 
 namespace OptiQ.BlazorUI.Services;
@@ -7,11 +9,20 @@ public class OptiQApiService
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<OptiQApiService> _logger;
+    private readonly JsonSerializerOptions _jsonOptions;
 
     public OptiQApiService(HttpClient httpClient, ILogger<OptiQApiService> logger)
     {
         _httpClient = httpClient;
         _logger = logger;
+        
+        // Configure JSON options for WebAssembly compatibility
+        _jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            ReferenceHandler = ReferenceHandler.IgnoreCycles
+        };
     }
 
     public async Task<PortfolioOptimizationResponse?> OptimizePortfolioAsync(
@@ -24,11 +35,11 @@ public class OptiQApiService
             
             _logger.LogInformation("Sending optimization request to API");
             
-            var response = await _httpClient.PostAsJsonAsync("api/portfolio/optimize", request);
+            var response = await _httpClient.PostAsJsonAsync("api/portfolio/optimize", request, _jsonOptions);
             
             if (response.IsSuccessStatusCode)
             {
-                var result = await response.Content.ReadFromJsonAsync<PortfolioOptimizationResponse>();
+                var result = await response.Content.ReadFromJsonAsync<PortfolioOptimizationResponse>(_jsonOptions);
                 _logger.LogInformation("Optimization completed successfully");
                 return result;
             }
@@ -51,7 +62,7 @@ public class OptiQApiService
         {
             _logger.LogInformation("Fetching sample portfolio data");
             
-            var response = await _httpClient.GetFromJsonAsync<PortfolioDataDto>("api/portfolio/sample");
+            var response = await _httpClient.GetFromJsonAsync<PortfolioDataDto>("api/portfolio/sample", _jsonOptions);
             
             _logger.LogInformation("Sample portfolio data retrieved");
             return response;
@@ -70,7 +81,7 @@ public class OptiQApiService
             _logger.LogInformation("Fetching random QAOA parameters");
             
             var response = await _httpClient.GetFromJsonAsync<QAOAParametersDto>(
-                $"api/portfolio/parameters/random?layers={layers}&samples={samples}");
+                $"api/portfolio/parameters/random?layers={layers}&samples={samples}", _jsonOptions);
             
             _logger.LogInformation("Random QAOA parameters retrieved");
             return response;
