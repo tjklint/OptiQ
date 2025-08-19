@@ -16,6 +16,8 @@
   <!-- Ensure runtime pack is resolved on CI/build agents -->
   <BlazorWebAssemblyEnableRuntimeSupport>true</BlazorWebAssemblyEnableRuntimeSupport>
   <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
+  <!-- Explicitly pin the WebAssembly runtime pack version to help CI resolve the pack -->
+  <WasmRuntimePackVersion>8.0.19</WasmRuntimePackVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
