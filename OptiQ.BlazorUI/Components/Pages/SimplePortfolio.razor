@@ -1,0 +1,269 @@
+@page "/simple"
+@using OptiQ.QuantumCore
+@using OptiQ.BlazorUI.Services
+@inject OptiQApiService ApiService
+@inject ILogger<SimplePortfolio> Logger
+
+<PageTitle>Simple Portfolio Optimizer</PageTitle>
+
+<div class="min-h-screen bg-gradient-to-br from-blue-950 via-purple-900 to-black">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent mb-4">
+                OptiQ - Simple Mode
+            </h1>
+            <p class="text-xl text-gray-300 mb-2">Quantum Portfolio Optimization</p>
+            <div class="flex justify-center items-center gap-2 mt-4">
+                <span class="@(_isApiHealthy ? "text-green-400" : "text-red-400")">
+                    @(_isApiHealthy ? "🟢 API Connected" : "🔴 API Disconnected")
+                </span>
+            </div>
+        </div>
+
+        <div class="max-w-4xl mx-auto">
+            <!-- Input Section -->
+            <div class="bg-gray-800/50 backdrop-blur-md rounded-xl p-6 border border-gray-700 shadow-xl mb-6">
+                <h2 class="text-2xl font-semibold text-white mb-4">Portfolio Settings</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div>
+                        <label class="block text-gray-300 text-sm font-medium mb-1">Budget ($)</label>
+                        <input @bind="_budget" type="number" min="1000" step="100"
+                               class="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-blue-500"/>
+                    </div>
+                    <div>
+                        <label class="block text-gray-300 text-sm font-medium mb-1">Risk Tolerance</label>
+                        <input @bind="_riskTolerance" type="number" min="0.1" max="1.0" step="0.1"
+                               class="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-blue-500"/>
+                    </div>
+                    <div>
+                        <label class="block text-gray-300 text-sm font-medium mb-1">QAOA Layers</label>
+                        <input @bind="_qaoaLayers" type="number" min="1" max="5" step="1"
+                               class="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-blue-500"/>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 mb-4">
+                    <button @onclick="LoadSampleData" 
+                            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors disabled:opacity-50"
+                            disabled="@_isLoading">
+                        @if (_isLoading)
+                        {
+                            <span>Loading...</span>
+                        }
+                        else
+                        {
+                            <span>Load Sample Portfolio</span>
+                        }
+                    </button>
+                    
+                    <button @onclick="OptimizePortfolio" 
+                            class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors disabled:opacity-50"
+                            disabled="@(_isOptimizing || _portfolioData == null)">
+                        @if (_isOptimizing)
+                        {
+                            <span>Optimizing...</span>
+                        }
+                        else
+                        {
+                            <span>🚀 Run Quantum Optimization</span>
+                        }
+                    </button>
+                </div>
+
+                @if (!string.IsNullOrEmpty(_statusMessage))
+                {
+                    <div class="bg-blue-900/50 border border-blue-600 rounded-lg p-3 mb-4">
+                        <p class="text-blue-200">@_statusMessage</p>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(_errorMessage))
+                {
+                    <div class="bg-red-900/50 border border-red-600 rounded-lg p-3 mb-4">
+                        <p class="text-red-200">@_errorMessage</p>
+                    </div>
+                }
+            </div>
+
+            <!-- Portfolio Display -->
+            @if (_portfolioData != null)
+            {
+                <div class="bg-gray-800/50 backdrop-blur-md rounded-xl p-6 border border-gray-700 shadow-xl mb-6">
+                    <h3 class="text-xl font-semibold text-white mb-4">Available Assets</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        @for (int i = 0; i < _portfolioData.AssetNames.Length; i++)
+                        {
+                            var index = i; // Capture for lambda
+                            <div class="bg-gray-700/50 rounded-lg p-3 border border-gray-600">
+                                <div class="font-medium text-white">@_portfolioData.AssetNames[index]</div>
+                                <div class="text-sm text-gray-300">Return: @(_portfolioData.AssetReturns[index] * 100).ToString("F1")%</div>
+                                <div class="text-sm text-gray-300">Risk: @(_portfolioData.RiskMatrix[index][index] * 100).ToString("F2")%</div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Results Display -->
+            @if (_optimizationResult != null)
+            {
+                <div class="bg-gray-800/50 backdrop-blur-md rounded-xl p-6 border border-gray-700 shadow-xl">
+                    <h3 class="text-xl font-semibold text-white mb-4">Optimization Results</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-green-900/30 border border-green-600 rounded-lg p-4">
+                            <div class="text-green-200 text-sm">Expected Return</div>
+                            <div class="text-green-400 text-2xl font-bold">@(_optimizationResult.ExpectedReturn * 100).ToString("F2")%</div>
+                        </div>
+                        <div class="bg-yellow-900/30 border border-yellow-600 rounded-lg p-4">
+                            <div class="text-yellow-200 text-sm">Risk</div>
+                            <div class="text-yellow-400 text-2xl font-bold">@(_optimizationResult.Risk * 100).ToString("F2")%</div>
+                        </div>
+                        <div class="bg-blue-900/30 border border-blue-600 rounded-lg p-4">
+                            <div class="text-blue-200 text-sm">Total Cost</div>
+                            <div class="text-blue-400 text-2xl font-bold">$@_optimizationResult.Cost.ToString("F2")</div>
+                        </div>
+                    </div>
+
+                    <h4 class="text-lg font-semibold text-white mb-3">Selected Assets</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        @foreach (var asset in _optimizationResult.SelectedAssets)
+                        {
+                            <div class="bg-purple-900/30 border border-purple-600 rounded-lg p-3">
+                                <span class="text-purple-200">✅ @asset</span>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="mt-4 text-sm text-gray-400">
+                        Optimization completed on @_optimizationResult.OptimizationTime.ToString("yyyy-MM-dd HH:mm:ss")
+                        with @_optimizationResult.SampleCount samples
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool _isApiHealthy = false;
+    private bool _isLoading = false;
+    private bool _isOptimizing = false;
+    private string _statusMessage = "";
+    private string _errorMessage = "";
+
+    private double _budget = 10000;
+    private double _riskTolerance = 0.5;
+    private int _qaoaLayers = 2;
+
+    private PortfolioDataDto? _portfolioData;
+    private PortfolioOptimizationResponse? _optimizationResult;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _isApiHealthy = await ApiService.CheckApiHealthAsync();
+            Logger.LogInformation("Simple portfolio page initialized. API healthy: {IsHealthy}", _isApiHealthy);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error initializing simple portfolio page");
+        }
+    }
+
+    private async Task LoadSampleData()
+    {
+        try
+        {
+            _isLoading = true;
+            _errorMessage = "";
+            _statusMessage = "Loading sample portfolio data...";
+            StateHasChanged();
+
+            Logger.LogInformation("Loading sample portfolio data");
+            _portfolioData = await ApiService.GetSamplePortfolioAsync();
+
+            if (_portfolioData != null)
+            {
+                _statusMessage = "Sample portfolio data loaded successfully!";
+                Logger.LogInformation("Sample portfolio loaded with {AssetCount} assets", _portfolioData.AssetNames.Length);
+            }
+            else
+            {
+                _errorMessage = "Failed to load sample portfolio data";
+                Logger.LogWarning("Failed to load sample portfolio data");
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Error loading sample data: {ex.Message}";
+            Logger.LogError(ex, "Error loading sample portfolio data");
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OptimizePortfolio()
+    {
+        if (_portfolioData == null) return;
+
+        try
+        {
+            _isOptimizing = true;
+            _errorMessage = "";
+            _statusMessage = "Running quantum optimization...";
+            StateHasChanged();
+
+            // Update portfolio data with current settings
+            _portfolioData.Budget = _budget;
+            _portfolioData.RiskTolerance = _riskTolerance;
+
+            // Create QAOA parameters
+            var qaoaParams = new QAOAParametersDto
+            {
+                Layers = _qaoaLayers,
+                Samples = 100,
+                BetaAngles = new double[_qaoaLayers],
+                GammaAngles = new double[_qaoaLayers]
+            };
+
+            // Initialize with simple values
+            for (int i = 0; i < _qaoaLayers; i++)
+            {
+                qaoaParams.BetaAngles[i] = 0.5;
+                qaoaParams.GammaAngles[i] = 0.7;
+            }
+
+            Logger.LogInformation("Starting optimization with {Layers} layers and budget {Budget}", _qaoaLayers, _budget);
+
+            _optimizationResult = await ApiService.OptimizePortfolioAsync(_portfolioData, qaoaParams);
+
+            if (_optimizationResult != null)
+            {
+                _statusMessage = "Optimization completed successfully!";
+                Logger.LogInformation("Optimization completed. Selected {AssetCount} assets", _optimizationResult.SelectedAssets.Length);
+            }
+            else
+            {
+                _errorMessage = "Optimization failed. Please try again.";
+                Logger.LogWarning("Optimization returned null result");
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Optimization error: {ex.Message}";
+            Logger.LogError(ex, "Error during portfolio optimization");
+        }
+        finally
+        {
+            _isOptimizing = false;
+            StateHasChanged();
+        }
+    }
+}
