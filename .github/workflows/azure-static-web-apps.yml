@@ -23,7 +23,17 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '8.0.100'
+
+      - name: Cache dotnet workload packs
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.dotnet
+            ~/.nuget/packages
+          key: dotnet-workloads-8.0-{{ runner.os }}-v1
+          restore-keys: |
+            dotnet-workloads-8.0-{{ runner.os }}-
 
       - name: Install .NET WebAssembly workload (wasm-tools)
         run: |
