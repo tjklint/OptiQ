@@ -10,12 +10,14 @@ public class OptiQApiService
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<OptiQApiService> _logger;
+    
+    // Use minimal JSON options for WebAssembly compatibility
     private static readonly JsonSerializerOptions _jsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        NumberHandling = JsonNumberHandling.AllowReadingFromString,
-        PropertyNameCaseInsensitive = true
+        PropertyNameCaseInsensitive = true,
+        WriteIndented = false,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
     public OptiQApiService(HttpClient httpClient, ILogger<OptiQApiService> logger)
