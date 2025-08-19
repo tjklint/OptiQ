@@ -4,6 +4,8 @@
 @code {
     protected override void OnInitialized()
     {
-        Navigation.NavigateTo("/portfolio");
+    // Use forceLoad to perform a full page load which avoids the WebAssembly
+    // JSInterop serialization path that can trigger NullabilityInfoContext_NotSupported
+    Navigation.NavigateTo("/portfolio", forceLoad: true);
     }
 }
