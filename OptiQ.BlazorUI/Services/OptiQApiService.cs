@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text;
 using OptiQ.QuantumCore;
 
 namespace OptiQ.BlazorUI.Services;
@@ -9,20 +10,18 @@ public class OptiQApiService
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<OptiQApiService> _logger;
-    private readonly JsonSerializerOptions _jsonOptions;
+    private static readonly JsonSerializerOptions _jsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        NumberHandling = JsonNumberHandling.AllowReadingFromString,
+        PropertyNameCaseInsensitive = true
+    };
 
     public OptiQApiService(HttpClient httpClient, ILogger<OptiQApiService> logger)
     {
         _httpClient = httpClient;
         _logger = logger;
-        
-        // Configure JSON options for WebAssembly compatibility
-        _jsonOptions = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            ReferenceHandler = ReferenceHandler.IgnoreCycles
-        };
     }
 
     public async Task<PortfolioOptimizationResponse?> OptimizePortfolioAsync(
@@ -35,11 +34,15 @@ public class OptiQApiService
             
             _logger.LogInformation("Sending optimization request to API");
             
-            var response = await _httpClient.PostAsJsonAsync("api/portfolio/optimize", request, _jsonOptions);
+            // Use string-based serialization to avoid WebAssembly JSON issues
+            var jsonString = JsonSerializer.Serialize(request, _jsonOptions);
+            var content = new StringContent(jsonString, Encoding.UTF8, "application/json");
+            var response = await _httpClient.PostAsync("api/portfolio/optimize", content);
             
             if (response.IsSuccessStatusCode)
             {
-                var result = await response.Content.ReadFromJsonAsync<PortfolioOptimizationResponse>(_jsonOptions);
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<PortfolioOptimizationResponse>(responseContent, _jsonOptions);
                 _logger.LogInformation("Optimization completed successfully");
                 return result;
             }
@@ -62,10 +65,16 @@ public class OptiQApiService
         {
             _logger.LogInformation("Fetching sample portfolio data");
             
-            var response = await _httpClient.GetFromJsonAsync<PortfolioDataDto>("api/portfolio/sample", _jsonOptions);
+            var response = await _httpClient.GetAsync("api/portfolio/sample");
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<PortfolioDataDto>(responseContent, _jsonOptions);
+                _logger.LogInformation("Sample portfolio data retrieved");
+                return result;
+            }
             
-            _logger.LogInformation("Sample portfolio data retrieved");
-            return response;
+            return null;
         }
         catch (Exception ex)
         {
@@ -80,11 +89,16 @@ public class OptiQApiService
         {
             _logger.LogInformation("Fetching random QAOA parameters");
             
-            var response = await _httpClient.GetFromJsonAsync<QAOAParametersDto>(
-                $"api/portfolio/parameters/random?layers={layers}&samples={samples}", _jsonOptions);
+            var response = await _httpClient.GetAsync($"api/portfolio/parameters/random?layers={layers}&samples={samples}");
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<QAOAParametersDto>(responseContent, _jsonOptions);
+                _logger.LogInformation("Random QAOA parameters retrieved");
+                return result;
+            }
             
-            _logger.LogInformation("Random QAOA parameters retrieved");
-            return response;
+            return null;
         }
         catch (Exception ex)
         {

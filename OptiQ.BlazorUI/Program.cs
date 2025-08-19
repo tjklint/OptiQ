@@ -11,14 +11,12 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 // Configure API base URL for production
 var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "https://localhost:7200";
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiBaseUrl) });
 
-// Configure JSON serialization options for WebAssembly compatibility
-builder.Services.Configure<JsonSerializerOptions>(options =>
+// Configure HttpClient with specific JSON options for WebAssembly
+builder.Services.AddScoped(sp => 
 {
-    options.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-    options.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-    options.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    var httpClient = new HttpClient { BaseAddress = new Uri(apiBaseUrl) };
+    return httpClient;
 });
 
 // Add services

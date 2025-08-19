@@ -1,0 +1,22 @@
+@page "/test"
+
+<h1>Test Page</h1>
+<p>This is a simple test page to verify WebAssembly routing works.</p>
+
+<button @onclick="TestClick" class="btn btn-primary">Test Button</button>
+
+@if (clicked)
+{
+    <p>Button was clicked! Count: @clickCount</p>
+}
+
+@code {
+    private bool clicked = false;
+    private int clickCount = 0;
+
+    private void TestClick()
+    {
+        clicked = true;
+        clickCount++;
+    }
+}
