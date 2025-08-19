@@ -1,0 +1,95 @@
+@page "/portfolio"
+
+<div class="min-h-screen bg-gradient-to-br from-blue-950 via-purple-900 to-black">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent mb-4">
+                OptiQ
+            </h1>
+            <p class="text-xl text-gray-300 mb-2">Quantum Portfolio Optimization</p>
+            <p class="text-sm text-gray-400">WebAssembly Compatible Version</p>
+        </div>
+
+        <div class="max-w-4xl mx-auto">
+            <!-- Simple static content -->
+            <div class="bg-gray-800/50 backdrop-blur-md rounded-xl p-6 border border-gray-700 shadow-xl mb-6">
+                <h2 class="text-2xl font-semibold text-white mb-4">Portfolio Optimizer</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div>
+                        <label class="block text-gray-300 text-sm font-medium mb-1">Budget ($)</label>
+                        <input type="number" value="10000" min="1000" step="100"
+                               class="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-blue-500"/>
+                    </div>
+                    <div>
+                        <label class="block text-gray-300 text-sm font-medium mb-1">Risk Tolerance</label>
+                        <input type="number" value="0.5" min="0.1" max="1.0" step="0.1"
+                               class="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-blue-500"/>
+                    </div>
+                    <div>
+                        <label class="block text-gray-300 text-sm font-medium mb-1">QAOA Layers</label>
+                        <input type="number" value="2" min="1" max="5" step="1"
+                               class="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-blue-500"/>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 mb-4">
+                    <button onclick="alert('Load Sample Data - Feature disabled for WebAssembly compatibility')" 
+                            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
+                        Load Sample Portfolio
+                    </button>
+                    
+                    <button onclick="alert('Optimization - Feature disabled for WebAssembly compatibility')" 
+                            class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
+                        🚀 Run Quantum Optimization
+                    </button>
+                </div>
+
+                <div class="bg-blue-900/50 border border-blue-600 rounded-lg p-3 mb-4">
+                    <p class="text-blue-200">This is a static demo version. The full functionality is available in the server version.</p>
+                </div>
+            </div>
+
+            <!-- Sample Results Display -->
+            <div class="bg-gray-800/50 backdrop-blur-md rounded-xl p-6 border border-gray-700 shadow-xl">
+                <h3 class="text-xl font-semibold text-white mb-4">Sample Optimization Results</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-green-900/30 border border-green-600 rounded-lg p-4">
+                        <div class="text-green-200 text-sm">Expected Return</div>
+                        <div class="text-green-400 text-2xl font-bold">12.45%</div>
+                    </div>
+                    <div class="bg-yellow-900/30 border border-yellow-600 rounded-lg p-4">
+                        <div class="text-yellow-200 text-sm">Risk</div>
+                        <div class="text-yellow-400 text-2xl font-bold">8.32%</div>
+                    </div>
+                    <div class="bg-blue-900/30 border border-blue-600 rounded-lg p-4">
+                        <div class="text-blue-200 text-sm">Total Cost</div>
+                        <div class="text-blue-400 text-2xl font-bold">$9,850.00</div>
+                    </div>
+                </div>
+
+                <h4 class="text-lg font-semibold text-white mb-3">Selected Assets (Sample)</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="bg-purple-900/30 border border-purple-600 rounded-lg p-3">
+                        <span class="text-purple-200">✅ AAPL</span>
+                    </div>
+                    <div class="bg-purple-900/30 border border-purple-600 rounded-lg p-3">
+                        <span class="text-purple-200">✅ GOOGL</span>
+                    </div>
+                    <div class="bg-purple-900/30 border border-purple-600 rounded-lg p-3">
+                        <span class="text-purple-200">✅ MSFT</span>
+                    </div>
+                    <div class="bg-purple-900/30 border border-purple-600 rounded-lg p-3">
+                        <span class="text-purple-200">✅ NVDA</span>
+                    </div>
+                </div>
+
+                <div class="mt-4 text-sm text-gray-400">
+                    Sample optimization completed with quantum QAOA algorithm (2 layers, 100 samples)
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
