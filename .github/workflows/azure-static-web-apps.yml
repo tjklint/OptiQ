@@ -24,6 +24,14 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
+
+      - name: Install .NET WebAssembly workload (wasm-tools)
+        run: |
+          dotnet --info
+          dotnet workload install wasm-tools --skip-manifest-update
+
+      - name: List installed workloads
+        run: dotnet workload list || true
           
       - name: Restore dependencies
         run: dotnet restore OptiQ.BlazorUI/OptiQ.BlazorUI.csproj
