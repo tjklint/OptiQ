@@ -4,6 +4,8 @@
 @code {
     protected override void OnInitialized()
     {
-        Navigation.NavigateTo("/portfolio");
+    // Navigate with forceLoad to bypass SPA navigation which triggers problematic
+    // System.Text.Json behavior in some WebAssembly environments
+    Navigation.NavigateTo("/portfolio", forceLoad: true);
     }
 }
