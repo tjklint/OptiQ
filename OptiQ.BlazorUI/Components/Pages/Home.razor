@@ -1,11 +1,7 @@
 ﻿@page "/"
-@inject NavigationManager Navigation
 
-@code {
-    protected override void OnInitialized()
-    {
-    // Use forceLoad to perform a full page load which avoids the WebAssembly
-    // JSInterop serialization path that can trigger NullabilityInfoContext_NotSupported
-    Navigation.NavigateTo("/portfolio", forceLoad: true);
-    }
-}
+<!-- Perform a direct browser redirect to avoid Blazor JSInterop serialization paths -->
+<div>
+    <script>window.location.replace('/portfolio');</script>
+    <noscript><a href="/portfolio">Continue to portfolio</a></noscript>
+</div>
