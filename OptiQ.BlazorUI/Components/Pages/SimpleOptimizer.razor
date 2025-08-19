@@ -1,0 +1,231 @@
+@page "/simple-optimizer"
+@using OptiQ.QuantumCore
+@using OptiQ.BlazorUI.Services
+@inject OptiQApiService ApiService
+@inject ILogger<SimpleOptimizer> Logger
+
+<h1>OptiQ - Simple Quantum Portfolio Optimizer</h1>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Portfolio Data</h3>
+                </div>
+                <div class="card-body">
+                    <button @onclick="LoadSampleData" class="btn btn-primary mb-3" disabled="@_isLoading">
+                        @if (_isLoading)
+                        {
+                            <span>Loading...</span>
+                        }
+                        else
+                        {
+                            <span>Load Sample Data</span>
+                        }
+                    </button>
+                    
+                    @if (_portfolioData != null && _portfolioData.AssetNames?.Length > 0)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Asset</th>
+                                        <th>Expected Return</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (int i = 0; i < _portfolioData.AssetNames.Length; i++)
+                                    {
+                                        <tr>
+                                            <td>@_portfolioData.AssetNames[i]</td>
+                                            <td>@($"{_portfolioData.AssetReturns[i]:P2}")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Optimization Results</h3>
+                </div>
+                <div class="card-body">
+                    <button @onclick="OptimizePortfolio" class="btn btn-success mb-3" disabled="@(_isLoading || _portfolioData == null)">
+                        @if (_isOptimizing)
+                        {
+                            <span>Optimizing...</span>
+                        }
+                        else
+                        {
+                            <span>Optimize Portfolio</span>
+                        }
+                    </button>
+                    
+                    @if (_optimizationResult != null)
+                    {
+                        <div class="alert alert-success">
+                            <h5>Optimization Complete!</h5>
+                            <p><strong>Expected Return:</strong> @($"{_optimizationResult.ExpectedReturn:C}")</p>
+                            <p><strong>Risk:</strong> @($"{_optimizationResult.Risk:P2}")</p>
+                            <p><strong>Total Cost:</strong> @($"{_optimizationResult.Cost:C}")</p>
+                            
+                            @if (_optimizationResult.SelectedAssets?.Length > 0)
+                            {
+                                <h6>Selected Assets:</h6>
+                                <ul>
+                                    @foreach (var asset in _optimizationResult.SelectedAssets)
+                                    {
+                                        <li>@asset</li>
+                                    }
+                                </ul>
+                            }
+                        </div>
+                    }
+                    
+                    @if (!string.IsNullOrEmpty(_errorMessage))
+                    {
+                        <div class="alert alert-danger">
+                            @_errorMessage
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private PortfolioDataDto? _portfolioData;
+    private PortfolioOptimizationResponse? _optimizationResult;
+    private QAOAParametersDto? _qaoaParameters;
+    private bool _isLoading = false;
+    private bool _isOptimizing = false;
+    private string _errorMessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await LoadSampleData();
+            await LoadDefaultParameters();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error during initialization");
+            _errorMessage = "Failed to initialize: " + ex.Message;
+        }
+    }
+
+    private async Task LoadSampleData()
+    {
+        try
+        {
+            _isLoading = true;
+            _errorMessage = "";
+            StateHasChanged();
+            
+            _portfolioData = await ApiService.GetSamplePortfolioAsync();
+            
+            if (_portfolioData == null)
+            {
+                _errorMessage = "Failed to load sample data";
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading sample data");
+            _errorMessage = "Error loading sample data: " + ex.Message;
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadDefaultParameters()
+    {
+        try
+        {
+            _qaoaParameters = await ApiService.GetRandomParametersAsync(2, 100);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading QAOA parameters");
+            // Don't show error for parameters, just use defaults
+            _qaoaParameters = new QAOAParametersDto
+            {
+                Layers = 2,
+                BetaAngles = new double[] { 0.5, 0.7 },
+                GammaAngles = new double[] { 0.3, 0.9 },
+                Samples = 100
+            };
+        }
+    }
+
+    private async Task OptimizePortfolio()
+    {
+        if (_portfolioData == null || _qaoaParameters == null)
+        {
+            _errorMessage = "Portfolio data or QAOA parameters not available";
+            return;
+        }
+
+        try
+        {
+            _isOptimizing = true;
+            _errorMessage = "";
+            _optimizationResult = null;
+            StateHasChanged();
+
+            _optimizationResult = await ApiService.OptimizePortfolioAsync(_portfolioData, _qaoaParameters);
+            
+            if (_optimizationResult == null)
+            {
+                _errorMessage = "Optimization failed - no result returned";
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error during optimization");
+            _errorMessage = "Optimization error: " + ex.Message;
+        }
+        finally
+        {
+            _isOptimizing = false;
+            StateHasChanged();
+        }
+    }
+}
+
+<style>
+    .container {
+        margin-top: 20px;
+    }
+    
+    .card {
+        margin-bottom: 20px;
+        background-color: #ffffff;
+        color: #333333;
+    }
+    
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .btn {
+        margin-right: 10px;
+    }
+    
+    .table th {
+        background-color: #f8f9fa;
+    }
+</style>
